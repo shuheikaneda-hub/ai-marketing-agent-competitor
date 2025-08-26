@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>競合比較・USP抽出ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --gray-700: #334155;
+            --gray-500: #64748b;
+            --gray-400: #94a3b8;
+            --gray-300: #cbd5e1;
+            --gray-200: #e2e8f0;
+            --gray-100: #f1f5f9;
+            --gray-50: #f8fafc;
+            --white: #ffffff;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius: 0.5rem;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+        
+        .required {
+            color: var(--danger);
+        }
+        
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-helper {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background: var(--white);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-light);
+        }
+        
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .analyze-section {
+            text-align: center;
+            padding: 2rem;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            margin: 2rem 0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .results-section {
+            display: none;
+        }
+        
+        .results-section.active {
+            display: block;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .results-table th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+        
+        .results-table tr:hover {
+            background: var(--gray-50);
+        }
+        
+        .rating {
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .rating-excellent { color: var(--success); }
+        .rating-good { color: var(--primary); }
+        .rating-average { color: var(--warning); }
+        .rating-poor { color: var(--danger); }
+        
+        .rank-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .rank-micro { background: #ffdddd; }
+        .rank-small { background: #ccffcc; }
+        .rank-medium { background: #ffffcc; }
+        .rank-large { background: #ffcccc; }
+        
+        .usp-priority {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .priority-high { background: #ffcccc; color: #991b1b; }
+        .priority-medium { background: #ffffcc; color: #854d0e; }
+        .priority-low { background: #ccffcc; color: #166534; }
+        
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--dark);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="logo">競合比較・USP抽出ツール</h1>
+            <button class="btn btn-secondary" onclick="fillSampleData()">
+                サンプルデータ入力
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                商品・競合情報
+            </div>
+            <div class="card-body">
+                <form id="analysisForm">
+                    <div class="form-group">
+                        <label class="form-label">
+                            商品名 <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" id="productName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            カテゴリ <span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" id="productCategory" required
+                               placeholder="例：掃除用品、化粧品、サプリメント">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            商品説明 <span class="required">*</span>
+                        </label>
+                        <textarea class="form-textarea" id="productDescription" required
+                                  placeholder="商品の特徴、機能、価格、ターゲット層などを詳しく記載"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            主な競合 <span class="required">*</span>
+                        </label>
+                        <textarea class="form-textarea" id="competitors" required
+                                  placeholder="競合商品名と簡単な説明を記載（複数ある場合は改行で区切る）"></textarea>
+                        <div class="form-helper">
+                            例：掃除機（15,000円、強力吸引）、ロボット掃除機（50,000円、自動運転）
+                        </div>
+                    </div>
+                    
+                    <div class="analyze-section">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            四段階競合比較・USP抽出を実行
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>分析中...</p>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <!-- 四段階競合比較 -->
+            <div class="card">
+                <div class="card-header">
+                    四段階競合比較分析
+                </div>
+                <div class="card-body">
+                    <table class="results-table" id="competitorTable">
+                        <thead>
+                            <tr>
+                                <th>競合ランク</th>
+                                <th>商品/サービス</th>
+                                <th>効果・効能</th>
+                                <th>利便性</th>
+                                <th>経済性</th>
+                                <th>総合評価</th>
+                            </tr>
+                        </thead>
+                        <tbody id="competitorTableBody">
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 2rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius);">
+                        <h4 style="margin-bottom: 0.5rem;">📊 競合ランク定義</h4>
+                        <ul style="margin-left: 1.5rem; color: var(--gray-700);">
+                            <li><strong>極小競合</strong>: 同一カテゴリ内での直接競合</li>
+                            <li><strong>小競合</strong>: 具体的手法の分類での競合</li>
+                            <li><strong>中競合</strong>: 実施方法の大分類での競合</li>
+                            <li><strong>大競合</strong>: 課題解決の根本手段での競合</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- USP分析 -->
+            <div class="card">
+                <div class="card-header">
+                    USP分析結果
+                </div>
+                <div class="card-body">
+                    <div id="recommendedUSP" style="padding: 1rem; background: #fff3cd; border-radius: var(--radius); margin-bottom: 2rem;">
+                        <h3 style="color: #856404; margin-bottom: 0.5rem;">🎯 推奨USP</h3>
+                        <div id="uspRecommendation"></div>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 1rem;">USP候補一覧</h4>
+                    <table class="results-table" id="uspTable">
+                        <thead>
+                            <tr>
+                                <th>優先度</th>
+                                <th>USPタイトル</th>
+                                <th>競合優位性</th>
+                                <th>顧客価値</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uspTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem; text-align: right;">
+                <button class="btn btn-secondary" onclick="exportResults()">
+                    結果をエクスポート
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+    
+    <script>
+        // GAS Proxy URL（実際のURLに置き換えてください）
+        const GAS_PROXY_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec'; // ← ここをGASのWeb App URLに置き換える
+        
+        // サンプルデータ入力
+        function fillSampleData() {
+            document.getElementById('productName').value = '独自技術モップ';
+            document.getElementById('productCategory').value = '掃除用品';
+            document.getElementById('productDescription').value = '独自のパイル構造により一拭きでホコリをキャッチ。価格5,980円。掃除習慣を作りたい30-50代主婦がターゲット。手軽さと経済性が特徴。';
+            document.getElementById('competitors').value = '掃除機（15,000円、強力吸引力で床掃除）\nロボット掃除機（50,000円、自動で床を掃除するロボット）\n他社モップ（2,980円、一般的なモップ商品）';
+            
+            showToast('サンプルデータを入力しました');
+        }
+        
+        // フォーム送信処理
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                productName: document.getElementById('productName').value,
+                productCategory: document.getElementById('productCategory').value,
+                productDescription: document.getElementById('productDescription').value,
+                competitors: document.getElementById('competitors').value
+            };
+            
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('resultsSection').classList.remove('active');
+            
+            try {
+                // Gemini APIで分析実行
+                const results = await analyzeWithGemini(formData);
+                displayAnalysisResults(results);
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('resultsSection').classList.add('active');
+                showToast('分析が完了しました');
+            } catch (error) {
+                console.error('分析エラー:', error);
+                // エラー時はサンプルデータを表示
+                displaySampleResults(formData);
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('resultsSection').classList.add('active');
+                showToast('サンプル結果を表示しています（API接続エラー）');
+            }
+        });
+        
+        // Gemini APIを使用した分析（GASプロキシ経由）
+        async function analyzeWithGemini(formData) {
+            const analysisPrompt = `
+以下の商品情報を基に、四段階競合比較とUSP抽出を行ってください：
+
+【商品情報】
+商品名: ${formData.productName}
+カテゴリ: ${formData.productCategory}
+商品説明: ${formData.productDescription}
+
+【入力された競合】
+${formData.competitors}
+
+【分析要件】
+
+1. 四段階競合比較分析
+競合を以下の4段階で分類し、入力されていない競合も推測して各ランクに最低1つ配置：
+- 極小競合: 同一カテゴリ内での直接競合
+- 小競合: 具体的手法の分類での競合
+- 中競合: 実施方法の大分類での競合
+- 大競合: 課題解決の根本手段での競合
+
+各競合を以下の観点で評価（◎○△×）：
+- 効果・効能
+- 利便性
+- 経済性
+
+2. USP抽出
+最低5つのUSP候補を優先度（高/中/低）付きで抽出
+
+【出力形式】
+以下のJSON形式で出力してください：
+
+{
+  "competitorAnalysis": [
+    {
+      "rank": "極小競合/小競合/中競合/大競合",
+      "product": "商品・サービス名",
+      "isOwnProduct": true/false,
+      "effectiveness": "◎/○/△/×",
+      "convenience": "◎/○/△/×",
+      "economy": "◎/○/△/×",
+      "overall": "総合評価文"
+    }
+  ],
+  "uspAnalysis": {
+    "recommendedUSP": {
+      "title": "推奨USPタイトル",
+      "description": "詳細説明",
+      "strategy": "コミュニケーション戦略"
+    },
+    "uspCandidates": [
+      {
+        "priority": "高/中/低",
+        "title": "USPタイトル",
+        "advantage": "競合優位性",
+        "value": "顧客価値"
+      }
+    ]
+  }
+}
+
+必ず自社商品を最初に配置し、isOwnProduct: true を設定してください。
+各ランクに最低1つずつ競合を配置してください。
+USP候補は最低5つ含めてください。
+`;
+
+            try {
+                console.log('分析開始 - GAS URL:', GAS_PROXY_URL);
+                
+                const response = await fetch(GAS_PROXY_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: JSON.stringify({
+                        prompt: analysisPrompt
+                    })
+                });
+                
+                console.log('レスポンスステータス:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('GASからの応答:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'API error');
+                }
+                
+                const resultText = result.data.candidates[0].content.parts[0].text;
+                console.log('Gemini応答:', resultText);
+                
+                // JSONパース
+                const jsonStr = resultText.replace(/```json\n?|\n?```/g, '').trim();
+                const analysis = JSON.parse(jsonStr);
+                
+                return analysis;
+            } catch (error) {
+                console.error('分析エラーの詳細:', error);
+                throw error;
+            }
+        }
+        
+        // 分析結果の表示
+        function displayAnalysisResults(results) {
+            // 四段階競合比較表示
+            const tbody = document.getElementById('competitorTableBody');
+            tbody.innerHTML = '';
+            
+            results.competitorAnalysis.forEach(item => {
+                const tr = document.createElement('tr');
+                
+                const rankClass = {
+                    '極小競合': 'rank-micro',
+                    '小競合': 'rank-small',
+                    '中競合': 'rank-medium',
+                    '大競合': 'rank-large'
+                }[item.rank] || '';
+                
+                const productName = item.isOwnProduct ? `${item.product}（自社）` : item.product;
+                
+                tr.innerHTML = `
+                    <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
+                    <td>${productName}</td>
+                    <td class="rating ${getRatingClass(item.effectiveness)}">${item.effectiveness}</td>
+                    <td class="rating ${getRatingClass(item.convenience)}">${item.convenience}</td>
+                    <td class="rating ${getRatingClass(item.economy)}">${item.economy}</td>
+                    <td>${item.overall}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // 推奨USP表示
+            if (results.uspAnalysis && results.uspAnalysis.recommendedUSP) {
+                document.getElementById('uspRecommendation').innerHTML = `
+                    <h4>${results.uspAnalysis.recommendedUSP.title}</h4>
+                    <p style="margin-top: 0.5rem;">${results.uspAnalysis.recommendedUSP.description}</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                        <strong>戦略：</strong> ${results.uspAnalysis.recommendedUSP.strategy || ''}
+                    </p>
+                `;
+            }
+            
+            // USP候補表示
+            const uspTbody = document.getElementById('uspTableBody');
+            uspTbody.innerHTML = '';
+            
+            if (results.uspAnalysis && results.uspAnalysis.uspCandidates) {
+                results.uspAnalysis.uspCandidates.forEach(usp => {
+                    const tr = document.createElement('tr');
+                    
+                    const priorityClass = {
+                        '高': 'priority-high',
+                        '中': 'priority-medium',
+                        '低': 'priority-low'
+                    }[usp.priority] || 'priority-medium';
+                    
+                    tr.innerHTML = `
+                        <td><span class="usp-priority ${priorityClass}">${usp.priority}</span></td>
+                        <td>${usp.title}</td>
+                        <td>${usp.advantage}</td>
+                        <td>${usp.value}</td>
+                    `;
+                    uspTbody.appendChild(tr);
+                });
+            }
+        }
+        
+        // サンプル結果表示
+        function displaySampleResults(formData) {
+            // 四段階競合比較結果
+            const competitorData = [
+                {
+                    rank: '極小競合',
+                    product: formData.productName + '（自社）',
+                    effectiveness: '◎',
+                    convenience: '◎',
+                    economy: '◎',
+                    overall: '◎ (高評価)'
+                },
+                {
+                    rank: '極小競合',
+                    product: '他社モップ',
+                    effectiveness: '△',
+                    convenience: '○',
+                    economy: '◎',
+                    overall: '○ (中評価)'
+                },
+                {
+                    rank: '小競合',
+                    product: 'ロボット掃除機',
+                    effectiveness: '○',
+                    convenience: '◎',
+                    economy: '×',
+                    overall: '○ (中評価)'
+                },
+                {
+                    rank: '中競合',
+                    product: '掃除機',
+                    effectiveness: '○',
+                    convenience: '△',
+                    economy: '△',
+                    overall: '△ (低評価)'
+                },
+                {
+                    rank: '大競合',
+                    product: '家事代行サービス',
+                    effectiveness: '◎',
+                    convenience: '◎',
+                    economy: '×',
+                    overall: '○ (中評価)'
+                }
+            ];
+            
+            const tbody = document.getElementById('competitorTableBody');
+            tbody.innerHTML = '';
+            
+            competitorData.forEach(item => {
+                const tr = document.createElement('tr');
+                
+                const rankClass = {
+                    '極小競合': 'rank-micro',
+                    '小競合': 'rank-small',
+                    '中競合': 'rank-medium',
+                    '大競合': 'rank-large'
+                }[item.rank];
+                
+                tr.innerHTML = `
+                    <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
+                    <td>${item.product}</td>
+                    <td class="rating ${getRatingClass(item.effectiveness)}">${item.effectiveness}</td>
+                    <td class="rating ${getRatingClass(item.convenience)}">${item.convenience}</td>
+                    <td class="rating ${getRatingClass(item.economy)}">${item.economy}</td>
+                    <td>${item.overall}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // 推奨USP
+            document.getElementById('uspRecommendation').innerHTML = `
+                <h4>独自技術による圧倒的な掃除効率と手軽さの両立</h4>
+                <p style="margin-top: 0.5rem;">独自のパイル構造により、他社モップや掃除機では実現できない「一拭きでの完璧な清掃」と「準備不要の手軽さ」を両立。忙しい主婦層に最適な掃除習慣作りのパートナー。</p>
+            `;
+            
+            // USP候補
+            const uspData = [
+                {
+                    priority: '高',
+                    title: '独自技術による3倍の吸着力',
+                    advantage: '特許取得済みの独自パイル構造',
+                    value: '掃除時間を半分に短縮'
+                },
+                {
+                    priority: '高',
+                    title: '手軽さNo.1の掃除習慣サポート',
+                    advantage: '準備・片付け不要',
+                    value: '毎日続けられる掃除習慣'
+                },
+                {
+                    priority: '中',
+                    title: '経済的な掃除ソリューション',
+                    advantage: '電気不要・維持費最小',
+                    value: '年間2万円の節約'
+                },
+                {
+                    priority: '中',
+                    title: '静音性による24時間利用可能',
+                    advantage: '無音での掃除が可能',
+                    value: 'いつでも掃除できる自由'
+                },
+                {
+                    priority: '中',
+                    title: 'エコフレンドリーな選択',
+                    advantage: '電力不要・洗って再利用',
+                    value: '環境に優しい掃除'
+                }
+            ];
+            
+            const uspTbody = document.getElementById('uspTableBody');
+            uspTbody.innerHTML = '';
+            
+            uspData.forEach(usp => {
+                const tr = document.createElement('tr');
+                
+                const priorityClass = {
+                    '高': 'priority-high',
+                    '中': 'priority-medium',
+                    '低': 'priority-low'
+                }[usp.priority];
+                
+                tr.innerHTML = `
+                    <td><span class="usp-priority ${priorityClass}">${usp.priority}</span></td>
+                    <td>${usp.title}</td>
+                    <td>${usp.advantage}</td>
+                    <td>${usp.value}</td>
+                `;
+                uspTbody.appendChild(tr);
+            });
+        }
+        
+        // 評価クラス取得
+        function getRatingClass(rating) {
+            switch(rating) {
+                case '◎': return 'rating-excellent';
+                case '○': return 'rating-good';
+                case '△': return 'rating-average';
+                case '×': return 'rating-poor';
+                default: return '';
+            }
+        }
+        
+        // 結果エクスポート
+        function exportResults() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                productName: document.getElementById('productName').value,
+                competitorAnalysis: [],
+                uspAnalysis: []
+            };
+            
+            // テーブルデータ収集（実装省略）
+            
+            const dataStr = JSON.stringify(results, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', `competitor_analysis_${Date.now()}.json`);
+            linkElement.click();
+            
+            showToast('結果をエクスポートしました');
+        }
+        
+        // トースト表示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
