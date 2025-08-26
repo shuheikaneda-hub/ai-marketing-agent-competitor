@@ -429,7 +429,7 @@
     
     <script>
         // GAS Proxy URL（実際のURLに置き換えてください）
-        const GAS_PROXY_URL = 'https://script.google.com/macros/library/d/1ZE8aEUOwI_yI5zHRCzXPCY8WE_WThiBt6DO-YL7dVxTaKk7ySo8SQMjU/3'; // ← ここをGASのWeb App URLに置き換える
+        const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbx3vBMk6Igoga8rnWQDINEZNDHjkukr7Iso_40O6IMuqU78Bs3hX8qs0s5Blzg4bmva/exec'; // ← ここをGASのWeb App URLに置き換える
         
         // サンプルデータ入力
         function fillSampleData() {
@@ -542,15 +542,13 @@ USP候補は最低5つ含めてください。
             try {
                 console.log('分析開始 - GAS URL:', GAS_PROXY_URL);
                 
+                // fetchの代わりにFormDataとno-corsモードを使用
+                const formDataToSend = new FormData();
+                formDataToSend.append('prompt', analysisPrompt);
+                
                 const response = await fetch(GAS_PROXY_URL, {
                     method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
-                    body: JSON.stringify({
-                        prompt: analysisPrompt
-                    })
+                    body: formDataToSend
                 });
                 
                 console.log('レスポンスステータス:', response.status);
@@ -820,7 +818,53 @@ USP候補は最低5つ含めてください。
                 toast.classList.remove('show');
             }, 3000);
         }
+        
+        // デバッグ用：GAS接続テスト
+        async function testGASConnection() {
+            console.log('GAS接続テスト開始...');
+            console.log('GAS URL:', GAS_PROXY_URL);
+            
+            try {
+                const response = await fetch(GAS_PROXY_URL);
+                const data = await response.json();
+                console.log('GAS接続テスト成功:', data);
+                showToast('✅ GAS接続成功');
+            } catch (error) {
+                console.error('GAS接続エラー:', error);
+                showToast('❌ GAS接続失敗: ' + error.message);
+            }
+        }
+        
+        // 簡単なAPIテスト
+        async function testSimplePrompt() {
+            console.log('簡単なプロンプトテスト開始...');
+            
+            try {
+                const response = await fetch(GAS_PROXY_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: JSON.stringify({
+                        prompt: 'こんにちは。テストです。簡単に返答してください。'
+                    })
+                });
+                
+                console.log('テストレスポンスステータス:', response.status);
+                const result = await response.json();
+                console.log('テスト結果:', result);
+                
+                if (result.success) {
+                    showToast('✅ API接続成功');
+                } else {
+                    showToast('❌ APIエラー: ' + result.error);
+                }
+            } catch (error) {
+                console.error('テストエラー:', error);
+                showToast('❌ テスト失敗: ' + error.message);
+            }
+        }
     </script>
 </body>
-
 </html>
