@@ -472,7 +472,7 @@
             }
         });
         
-        // Gemini APIを使用した分析（GASプロキシ経由）
+        // Gemini APIを使用した分析（GASプロキシ経由 - 修正版）
         async function analyzeWithGemini(formData) {
             const analysisPrompt = `
 以下の商品情報を基に、四段階競合比較とUSP抽出を行ってください：
@@ -542,23 +542,40 @@ USP候補は最低5つ含めてください。
             try {
                 console.log('分析開始 - GAS URL:', GAS_PROXY_URL);
                 
-                // fetchの代わりにFormDataとno-corsモードを使用
-                const formDataToSend = new FormData();
-                formDataToSend.append('prompt', analysisPrompt);
+                // URLパラメータとして送信する方法
+                const params = new URLSearchParams({
+                    prompt: analysisPrompt
+                });
                 
                 const response = await fetch(GAS_PROXY_URL, {
                     method: 'POST',
-                    body: formDataToSend
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params.toString()
                 });
                 
                 console.log('レスポンスステータス:', response.status);
                 
-                if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status}`);
+                const responseText = await response.text();
+                console.log('レスポンステキスト:', responseText);
+                
+                // HTMLレスポンスからJSONを抽出
+                let result;
+                try {
+                    // 直接JSONパースを試みる
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    // HTMLに埋め込まれている場合は抽出
+                    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        result = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error('JSONデータが見つかりません');
+                    }
                 }
-
-                const result = await response.json();
-                console.log('GASからの応答:', result);
+                
+                console.log('パース結果:', result);
                 
                 if (!result.success) {
                     throw new Error(result.error || 'API error');
@@ -868,4 +885,3 @@ USP候補は最低5つ含めてください。
     </script>
 </body>
 </html>
-
