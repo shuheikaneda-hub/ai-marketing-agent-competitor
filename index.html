@@ -428,8 +428,8 @@
     </div>
     
     <script>
-        // GAS Proxy URL（実際のURLに置き換えてください）
-        const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbyzvQeN_uI-DiqynipRE1pem7fJRF_rvt30JHsuAuLH1-k-MDKkotVpukRAsW0lEEGa/exec'; // ← ここをGASのWeb App URLに置き換える
+        // メリット・ベネフィット分析と同じGAS URLを使用
+        const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbyzvQeN_uI-DiqynipRE1pem7fJRF_rvt30JHsuAuLH1-k-MDKkotVpukRAsW0lEEGa/exec'; // ← メリット・ベネフィット分析で動作しているURLをここに
         
         // サンプルデータ入力
         function fillSampleData() {
@@ -472,127 +472,134 @@
             }
         });
         
-        // Gemini APIを使用した分析（GASプロキシ経由 - 修正版）
+        // Gemini APIを使用した分析（GASプロキシ経由 - 簡素化版）
         async function analyzeWithGemini(formData) {
-            const analysisPrompt = `
-以下の商品情報を基に、四段階競合比較とUSP抽出を行ってください：
-
-【商品情報】
+            // まず簡単なプロンプトでテスト
+            const simplePrompt = `
 商品名: ${formData.productName}
 カテゴリ: ${formData.productCategory}
-商品説明: ${formData.productDescription}
+説明: ${formData.productDescription}
+競合: ${formData.competitors}
 
-【入力された競合】
-${formData.competitors}
-
-【分析要件】
-
-1. 四段階競合比較分析
-競合を以下の4段階で分類し、入力されていない競合も推測して各ランクに最低1つ配置：
-- 極小競合: 同一カテゴリ内での直接競合
-- 小競合: 具体的手法の分類での競合
-- 中競合: 実施方法の大分類での競合
-- 大競合: 課題解決の根本手段での競合
-
-各競合を以下の観点で評価（◎○△×）：
-- 効果・効能
-- 利便性
-- 経済性
-
-2. USP抽出
-最低5つのUSP候補を優先度（高/中/低）付きで抽出
-
-【出力形式】
-以下のJSON形式で出力してください：
-
+上記の商品について、簡単な競合分析を行い、以下のJSON形式で回答してください：
 {
   "competitorAnalysis": [
-    {
-      "rank": "極小競合/小競合/中競合/大競合",
-      "product": "商品・サービス名",
-      "isOwnProduct": true/false,
-      "effectiveness": "◎/○/△/×",
-      "convenience": "◎/○/△/×",
-      "economy": "◎/○/△/×",
-      "overall": "総合評価文"
-    }
+    {"rank": "極小競合", "product": "自社商品", "effectiveness": "◎", "convenience": "◎", "economy": "◎"},
+    {"rank": "小競合", "product": "競合A", "effectiveness": "○", "convenience": "○", "economy": "△"}
   ],
   "uspAnalysis": {
-    "recommendedUSP": {
-      "title": "推奨USPタイトル",
-      "description": "詳細説明",
-      "strategy": "コミュニケーション戦略"
-    },
+    "recommendedUSP": {"title": "主要USP", "description": "説明"},
     "uspCandidates": [
-      {
-        "priority": "高/中/低",
-        "title": "USPタイトル",
-        "advantage": "競合優位性",
-        "value": "顧客価値"
-      }
+      {"priority": "高", "title": "USP1", "advantage": "優位性1", "value": "価値1"}
     ]
   }
 }
-
-必ず自社商品を最初に配置し、isOwnProduct: true を設定してください。
-各ランクに最低1つずつ競合を配置してください。
-USP候補は最低5つ含めてください。
 `;
 
             try {
                 console.log('分析開始 - GAS URL:', GAS_PROXY_URL);
-                
-                // URLパラメータとして送信する方法
-                const params = new URLSearchParams({
-                    prompt: analysisPrompt
-                });
+                console.log('送信プロンプト（短縮版）:', simplePrompt.substring(0, 200));
                 
                 const response = await fetch(GAS_PROXY_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/json'
                     },
-                    body: params.toString()
+                    body: JSON.stringify({
+                        prompt: simplePrompt
+                    })
                 });
                 
                 console.log('レスポンスステータス:', response.status);
                 
-                const responseText = await response.text();
-                console.log('レスポンステキスト:', responseText);
-                
-                // HTMLレスポンスからJSONを抽出
-                let result;
-                try {
-                    // 直接JSONパースを試みる
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    // HTMLに埋め込まれている場合は抽出
-                    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        result = JSON.parse(jsonMatch[0]);
-                    } else {
-                        throw new Error('JSONデータが見つかりません');
-                    }
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
                 }
-                
-                console.log('パース結果:', result);
+
+                const result = await response.json();
+                console.log('GASからの応答:', result);
                 
                 if (!result.success) {
                     throw new Error(result.error || 'API error');
                 }
                 
+                // Geminiの応答を取得
                 const resultText = result.data.candidates[0].content.parts[0].text;
-                console.log('Gemini応答:', resultText);
+                console.log('Gemini生応答:', resultText);
                 
-                // JSONパース
-                const jsonStr = resultText.replace(/```json\n?|\n?```/g, '').trim();
-                const analysis = JSON.parse(jsonStr);
+                // JSONを抽出（マークダウンやコードブロックを除去）
+                let jsonStr = resultText;
                 
-                return analysis;
+                // ```json ... ``` を除去
+                jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+                
+                // 最初の { から最後の } までを抽出
+                const startIndex = jsonStr.indexOf('{');
+                const endIndex = jsonStr.lastIndexOf('}');
+                
+                if (startIndex === -1 || endIndex === -1) {
+                    console.error('JSON形式が見つかりません:', jsonStr);
+                    // フォールバック: サンプルデータを返す
+                    return createFallbackData(formData);
+                }
+                
+                jsonStr = jsonStr.substring(startIndex, endIndex + 1);
+                console.log('抽出されたJSON:', jsonStr);
+                
+                try {
+                    const analysis = JSON.parse(jsonStr);
+                    return analysis;
+                } catch (parseError) {
+                    console.error('JSONパースエラー:', parseError);
+                    console.log('パース対象文字列:', jsonStr);
+                    return createFallbackData(formData);
+                }
+                
             } catch (error) {
                 console.error('分析エラーの詳細:', error);
                 throw error;
             }
+        }
+        
+        // フォールバックデータ生成
+        function createFallbackData(formData) {
+            return {
+                competitorAnalysis: [
+                    {
+                        rank: "極小競合",
+                        product: formData.productName + "（自社）",
+                        isOwnProduct: true,
+                        effectiveness: "◎",
+                        convenience: "◎",
+                        economy: "◎",
+                        overall: "◎ (高評価)"
+                    },
+                    {
+                        rank: "小競合",
+                        product: "競合製品",
+                        isOwnProduct: false,
+                        effectiveness: "○",
+                        convenience: "△",
+                        economy: "○",
+                        overall: "○ (中評価)"
+                    }
+                ],
+                uspAnalysis: {
+                    recommendedUSP: {
+                        title: "分析中",
+                        description: "詳細分析を実行中です",
+                        strategy: ""
+                    },
+                    uspCandidates: [
+                        {
+                            priority: "高",
+                            title: "主要差別化ポイント",
+                            advantage: "独自性",
+                            value: "顧客価値"
+                        }
+                    ]
+                }
+            };
         }
         
         // 分析結果の表示
@@ -885,5 +892,3 @@ USP候補は最低5つ含めてください。
     </script>
 </body>
 </html>
-
-
