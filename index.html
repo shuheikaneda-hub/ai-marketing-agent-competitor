@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>競合比較・USP抽出ツール</title>
+    <title>商品価値分析ツール | Product Value & Competitor Analyzer</title>
     <style>
         * {
             margin: 0;
@@ -12,14 +12,15 @@
         }
         
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --primary-light: #dbeafe;
-            --secondary: #7c3aed;
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --primary-light: #e0e7ff;
+            --secondary: #ec4899;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --dark: #1e293b;
+            --dark: #0f172a;
+            --gray-900: #1e293b;
             --gray-700: #334155;
             --gray-500: #64748b;
             --gray-400: #94a3b8;
@@ -28,10 +29,13 @@
             --gray-100: #f1f5f9;
             --gray-50: #f8fafc;
             --white: #ffffff;
-            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
             --radius: 0.5rem;
+            --radius-lg: 0.75rem;
         }
         
         body {
@@ -42,11 +46,12 @@
             line-height: 1.6;
         }
         
+        /* ヘッダー */
         .header {
             background: var(--white);
             border-bottom: 1px solid var(--gray-200);
             padding: 1rem 0;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-sm);
         }
         
         .header-container {
@@ -61,18 +66,22 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
+        /* メインコンテナ */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
         
+        /* カード */
         .card {
             background: var(--white);
-            border-radius: var(--radius);
+            border-radius: var(--radius-lg);
             box-shadow: var(--shadow-lg);
             margin-bottom: 2rem;
             overflow: hidden;
@@ -80,16 +89,18 @@
         
         .card-header {
             padding: 1.5rem;
-            background: var(--gray-50);
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
             border-bottom: 1px solid var(--gray-200);
             font-size: 1.25rem;
             font-weight: 600;
+            color: var(--gray-900);
         }
         
         .card-body {
             padding: 1.5rem;
         }
         
+        /* フォーム要素 */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -99,14 +110,22 @@
             font-weight: 600;
             color: var(--gray-700);
             margin-bottom: 0.5rem;
+            font-size: 0.9rem;
         }
         
         .required {
             color: var(--danger);
         }
         
+        .optional {
+            color: var(--gray-500);
+            font-weight: normal;
+            font-size: 0.875rem;
+        }
+        
         .form-input,
-        .form-textarea {
+        .form-textarea,
+        .form-select {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid var(--gray-300);
@@ -116,14 +135,15 @@
         }
         
         .form-input:focus,
-        .form-textarea:focus {
+        .form-textarea:focus,
+        .form-select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
         
         .form-textarea {
-            min-height: 120px;
+            min-height: 150px;
             resize: vertical;
             font-family: inherit;
         }
@@ -134,6 +154,7 @@
             margin-top: 0.25rem;
         }
         
+        /* ボタン */
         .btn {
             padding: 0.75rem 1.5rem;
             border-radius: var(--radius);
@@ -148,12 +169,11 @@
         }
         
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
         
         .btn-primary:hover {
-            background: var(--primary-dark);
             transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
@@ -173,14 +193,16 @@
             justify-content: center;
         }
         
+        /* 分析ボタンエリア */
         .analyze-section {
             text-align: center;
             padding: 2rem;
-            background: var(--gray-50);
-            border-radius: var(--radius);
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border-radius: var(--radius-lg);
             margin: 2rem 0;
         }
         
+        /* ローディング */
         .loading {
             display: none;
             text-align: center;
@@ -195,7 +217,10 @@
             width: 48px;
             height: 48px;
             border: 3px solid var(--gray-200);
-            border-top-color: var(--primary);
+            border-top-color: transparent;
+            border-right-color: #667eea;
+            border-bottom-color: transparent;
+            border-left-color: #764ba2;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 1rem;
@@ -205,6 +230,7 @@
             to { transform: rotate(360deg); }
         }
         
+        /* 結果セクション */
         .results-section {
             display: none;
         }
@@ -213,6 +239,7 @@
             display: block;
         }
         
+        /* 結果テーブル */
         .results-table {
             width: 100%;
             border-collapse: collapse;
@@ -229,12 +256,53 @@
         .results-table th {
             background: var(--gray-100);
             font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.9rem;
         }
         
         .results-table tr:hover {
             background: var(--gray-50);
         }
         
+        /* 優先順位バッジ */
+        .priority-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .priority-1st {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .priority-2nd {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .priority-3rd {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+        
+        /* 競合ランクバッジ */
+        .rank-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .rank-micro { background: #fef3c7; color: #92400e; }
+        .rank-small { background: #e0e7ff; color: #3730a3; }
+        .rank-medium { background: #dcfce7; color: #166534; }
+        .rank-large { background: #fee2e2; color: #991b1b; }
+        
+        /* 評価 */
         .rating {
             font-weight: 600;
             text-align: center;
@@ -245,19 +313,7 @@
         .rating-average { color: var(--warning); }
         .rating-poor { color: var(--danger); }
         
-        .rank-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        
-        .rank-micro { background: #ffdddd; }
-        .rank-small { background: #ccffcc; }
-        .rank-medium { background: #ffffcc; }
-        .rank-large { background: #ffcccc; }
-        
+        /* USP優先度 */
         .usp-priority {
             display: inline-block;
             padding: 0.25rem 0.5rem;
@@ -266,10 +322,25 @@
             font-weight: 600;
         }
         
-        .priority-high { background: #ffcccc; color: #991b1b; }
-        .priority-medium { background: #ffffcc; color: #854d0e; }
-        .priority-low { background: #ccffcc; color: #166534; }
+        .priority-high { background: #fee2e2; color: #991b1b; }
+        .priority-medium { background: #fef3c7; color: #92400e; }
+        .priority-low { background: #dcfce7; color: #166534; }
         
+        /* USP推奨ボックス */
+        .usp-recommendation {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            border: 1px solid #f59e0b;
+        }
+        
+        .usp-recommendation h3 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* トースト */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -278,7 +349,7 @@
             color: white;
             padding: 1rem 1.5rem;
             border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-xl);
             transform: translateX(400px);
             transition: transform 0.3s;
             z-index: 1000;
@@ -287,22 +358,63 @@
         .toast.show {
             transform: translateX(0);
         }
+        
+        /* タブナビゲーション */
+        .tab-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--white);
+            padding: 0.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            color: var(--gray-500);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
+    <!-- ヘッダー -->
     <header class="header">
         <div class="header-container">
-            <h1 class="logo">競合比較・USP抽出ツール</h1>
-            <button class="btn btn-secondary" onclick="fillSampleData()">
-                サンプルデータ入力
-            </button>
+            <h1 class="logo">商品価値分析ツール</h1>
+            <div>
+                <button class="btn btn-secondary" onclick="fillSampleData()">
+                    サンプルデータ入力
+                </button>
+            </div>
         </div>
     </header>
 
+    <!-- メインコンテンツ -->
     <main class="container">
+        <!-- 入力フォーム -->
         <div class="card">
             <div class="card-header">
-                商品・競合情報
+                商品基本情報
             </div>
             <div class="card-body">
                 <form id="analysisForm">
@@ -317,23 +429,36 @@
                         <label class="form-label">
                             カテゴリ <span class="required">*</span>
                         </label>
-                        <input type="text" class="form-input" id="productCategory" required
-                               placeholder="例：掃除用品、化粧品、サプリメント">
+                        <select class="form-select" id="productCategory" required>
+                            <option value="">選択してください</option>
+                            <option value="化粧品・美容">化粧品・美容</option>
+                            <option value="健康・サプリメント">健康・サプリメント</option>
+                            <option value="食品・飲料">食品・飲料</option>
+                            <option value="家電・電子機器">家電・電子機器</option>
+                            <option value="家庭用品">家庭用品</option>
+                            <option value="ファッション">ファッション</option>
+                            <option value="教育・学習">教育・学習</option>
+                            <option value="サービス">サービス</option>
+                            <option value="その他">その他</option>
+                        </select>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">
                             商品説明 <span class="required">*</span>
                         </label>
-                        <textarea class="form-textarea" id="productDescription" required
-                                  placeholder="商品の特徴、機能、価格、ターゲット層などを詳しく記載"></textarea>
+                        <textarea class="form-textarea" id="productDescription" required 
+                                  placeholder="商品の詳細な説明を入力してください。特徴、機能、対象者、価格、競合との違いなど、できるだけ詳しく記載してください。"></textarea>
+                        <div class="form-helper">
+                            LPやカタログの商品説明文、プレスリリースなどをそのまま貼り付けることができます
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            主な競合 <span class="required">*</span>
+                            主な競合 <span class="optional">(任意)</span>
                         </label>
-                        <textarea class="form-textarea" id="competitors" required
+                        <textarea class="form-textarea" id="competitors" 
                                   placeholder="競合商品名と簡単な説明を記載（複数ある場合は改行で区切る）"></textarea>
                         <div class="form-helper">
                             例：掃除機（15,000円、強力吸引）、ロボット掃除機（50,000円、自動運転）
@@ -342,101 +467,179 @@
                     
                     <div class="analyze-section">
                         <button type="submit" class="btn btn-primary btn-block">
-                            四段階競合比較・USP抽出を実行
+                            統合分析を実行（メリット・ベネフィット＋競合比較＋USP抽出）
                         </button>
                     </div>
                 </form>
             </div>
         </div>
         
+        <!-- ローディング -->
         <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>分析中...</p>
+            <div class="card">
+                <div class="card-body">
+                    <div class="spinner"></div>
+                    <p>分析中...</p>
+                    <p style="font-size: 0.875rem; color: var(--gray-500); margin-top: 1rem;">
+                        複数の分析を実行中です。少々お待ちください...
+                    </p>
+                </div>
+            </div>
         </div>
         
+        <!-- 結果表示 -->
         <div class="results-section" id="resultsSection">
-            <!-- 四段階競合比較 -->
-            <div class="card">
-                <div class="card-header">
-                    四段階競合比較分析
+            <!-- タブナビゲーション -->
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('merit')">
+                    メリット・ベネフィット分析
+                </button>
+                <button class="tab-btn" onclick="switchTab('competitor')">
+                    四段階競合比較
+                </button>
+                <button class="tab-btn" onclick="switchTab('usp')">
+                    USP分析
+                </button>
+            </div>
+            
+            <!-- メリット・ベネフィット分析 -->
+            <div class="tab-content active" id="merit-tab">
+                <div class="card">
+                    <div class="card-header">
+                        メリット・ベネフィット分析結果
+                    </div>
+                    <div class="card-body">
+                        <table class="results-table" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">優先順位</th>
+                                    <th style="width: 25%;">メリット（強み・特徴）</th>
+                                    <th style="width: 15%;">カテゴリ</th>
+                                    <th style="width: 25%;">ベネフィット（便益・望ましい未来）</th>
+                                    <th style="width: 15%;">カテゴリ</th>
+                                    <th style="width: 10%;">判断根拠</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- 結果がここに挿入される -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="results-table" id="competitorTable">
-                        <thead>
-                            <tr>
-                                <th>競合ランク</th>
-                                <th>商品/サービス</th>
-                                <th>効果・効能</th>
-                                <th>利便性</th>
-                                <th>経済性</th>
-                                <th>総合評価</th>
-                            </tr>
-                        </thead>
-                        <tbody id="competitorTableBody">
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top: 2rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius);">
-                        <h4 style="margin-bottom: 0.5rem;">📊 競合ランク定義</h4>
-                        <ul style="margin-left: 1.5rem; color: var(--gray-700);">
-                            <li><strong>極小競合</strong>: 同一カテゴリ内での直接競合</li>
-                            <li><strong>小競合</strong>: 具体的手法の分類での競合</li>
-                            <li><strong>中競合</strong>: 実施方法の大分類での競合</li>
-                            <li><strong>大競合</strong>: 課題解決の根本手段での競合</li>
-                        </ul>
+            </div>
+            
+            <!-- 四段階競合比較 -->
+            <div class="tab-content" id="competitor-tab">
+                <div class="card">
+                    <div class="card-header">
+                        四段階競合比較分析
+                    </div>
+                    <div class="card-body">
+                        <table class="results-table" id="competitorTable">
+                            <thead>
+                                <tr>
+                                    <th>競合ランク</th>
+                                    <th>商品/サービス</th>
+                                    <th>効果・効能</th>
+                                    <th>利便性</th>
+                                    <th>経済性</th>
+                                    <th>総合評価</th>
+                                </tr>
+                            </thead>
+                            <tbody id="competitorTableBody">
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 2rem; padding: 1rem; background: var(--gray-50); border-radius: var(--radius);">
+                            <h4 style="margin-bottom: 0.5rem;">📊 競合ランク定義</h4>
+                            <ul style="margin-left: 1.5rem; color: var(--gray-700);">
+                                <li><strong>極小競合</strong>: 同一カテゴリ内での直接競合</li>
+                                <li><strong>小競合</strong>: 具体的手法の分類での競合</li>
+                                <li><strong>中競合</strong>: 実施方法の大分類での競合</li>
+                                <li><strong>大競合</strong>: 課題解決の根本手段での競合</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
             
             <!-- USP分析 -->
-            <div class="card">
-                <div class="card-header">
-                    USP分析結果
-                </div>
-                <div class="card-body">
-                    <div id="recommendedUSP" style="padding: 1rem; background: #fff3cd; border-radius: var(--radius); margin-bottom: 2rem;">
-                        <h3 style="color: #856404; margin-bottom: 0.5rem;">🎯 推奨USP</h3>
-                        <div id="uspRecommendation"></div>
+            <div class="tab-content" id="usp-tab">
+                <div class="card">
+                    <div class="card-header">
+                        USP分析結果
                     </div>
-                    
-                    <h4 style="margin-bottom: 1rem;">USP候補一覧</h4>
-                    <table class="results-table" id="uspTable">
-                        <thead>
-                            <tr>
-                                <th>優先度</th>
-                                <th>USPタイトル</th>
-                                <th>競合優位性</th>
-                                <th>顧客価値</th>
-                            </tr>
-                        </thead>
-                        <tbody id="uspTableBody">
-                        </tbody>
-                    </table>
+                    <div class="card-body">
+                        <div class="usp-recommendation" id="recommendedUSP">
+                            <h3>🎯 推奨USP</h3>
+                            <div id="uspRecommendation"></div>
+                        </div>
+                        
+                        <h4 style="margin-bottom: 1rem;">USP候補一覧</h4>
+                        <table class="results-table" id="uspTable">
+                            <thead>
+                                <tr>
+                                    <th>優先度</th>
+                                    <th>USPタイトル</th>
+                                    <th>競合優位性</th>
+                                    <th>顧客価値</th>
+                                </tr>
+                            </thead>
+                            <tbody id="uspTableBody">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
-            <div style="margin-top: 1rem; text-align: right;">
-                <button class="btn btn-secondary" onclick="exportResults()">
-                    結果をエクスポート
+            <div style="margin-top: 2rem; text-align: right;">
+                <button class="btn btn-secondary" onclick="exportToCSV()">
+                    全結果をCSVエクスポート
                 </button>
             </div>
         </div>
     </main>
     
+    <!-- トースト -->
     <div class="toast" id="toast">
         <span id="toastMessage"></span>
     </div>
     
     <script>
-        // メリット・ベネフィット分析と同じGAS URLを使用
-        const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbyzvQeN_uI-DiqynipRE1pem7fJRF_rvt30JHsuAuLH1-k-MDKkotVpukRAsW0lEEGa/exec'; // ← メリット・ベネフィット分析で動作しているURLをここに
+        // GAS Proxy設定
+        const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbyzvQeN_uI-DiqynipRE1pem7fJRF_rvt30JHsuAuLH1-k-MDKkotVpukRAsW0lEEGa/exec';
+        
+        // タブ切り替え
+        function switchTab(tabName) {
+            // すべてのタブボタンとコンテンツを非アクティブに
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 選択されたタブをアクティブに
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
         
         // サンプルデータ入力
         function fillSampleData() {
-            document.getElementById('productName').value = '独自技術モップ';
-            document.getElementById('productCategory').value = '掃除用品';
-            document.getElementById('productDescription').value = '独自のパイル構造により一拭きでホコリをキャッチ。価格5,980円。掃除習慣を作りたい30-50代主婦がターゲット。手軽さと経済性が特徴。';
-            document.getElementById('competitors').value = '掃除機（15,000円、強力吸引力で床掃除）\nロボット掃除機（50,000円、自動で床を掃除するロボット）\n他社モップ（2,980円、一般的なモップ商品）';
+            document.getElementById('productName').value = 'マイクロカプセル化レチノール美容液';
+            document.getElementById('productCategory').value = '化粧品・美容';
+            document.getElementById('productDescription').value = `マイクロカプセル化レチノール配合・エイジングケア美容液。独自開発のマイクロカプセル技術により、レチノールを安定化させ、肌への刺激を抑えながら効果的に浸透。従来のレチノール製品の3倍の浸透力を実現。
+
+主な特徴：
+- 皮膚科医監修で開発された安心の処方
+- 敏感肌でも使用できる低刺激設計
+- ヒアルロン酸、ビタミンC誘導体、セラミド3種類を高濃度配合
+- 臨床試験でシワ改善効果を実証済み
+- 30日間返金保証付き
+- 専門のスキンケアコンサルタントによる無料相談サービス
+
+価格：12,800円（30ml、約2ヶ月分）
+対象：30-50代のエイジングケアに関心の高い女性`;
+            
+            document.getElementById('competitors').value = `SK-II（24,200円、高級ブランド、ピテラ配合）
+資生堂エリクシール（8,800円、レチノール配合、国内大手ブランド）
+KOSE ONE BY KOSE（5,500円、ナイアシンアミド配合、プチプラ）`;
             
             showToast('サンプルデータを入力しました');
         }
@@ -452,13 +655,21 @@
                 competitors: document.getElementById('competitors').value
             };
             
+            // ローディング表示
             document.getElementById('loading').classList.add('active');
             document.getElementById('resultsSection').classList.remove('active');
             
             try {
-                // Gemini APIで分析実行
-                const results = await analyzeWithGemini(formData);
-                displayAnalysisResults(results);
+                // 3つの分析を並行実行
+                const [meritAnalysis, competitorAnalysis] = await Promise.all([
+                    analyzeWithGemini(formData, 'merit'),
+                    analyzeWithGemini(formData, 'competitor')
+                ]);
+                
+                // 結果表示
+                displayMeritAnalysisResults(meritAnalysis);
+                displayCompetitorAnalysisResults(competitorAnalysis);
+                
                 document.getElementById('loading').classList.remove('active');
                 document.getElementById('resultsSection').classList.add('active');
                 showToast('分析が完了しました');
@@ -472,331 +683,223 @@
             }
         });
         
-        // Gemini APIを使用した分析（GASプロキシ経由 - 簡素化版）
-        async function analyzeWithGemini(formData) {
-            // まず簡単なプロンプトでテスト
-            const simplePrompt = `
+        // Gemini APIを使用した分析
+        async function analyzeWithGemini(formData, analysisType) {
+            let prompt = '';
+            
+            if (analysisType === 'merit') {
+                prompt = `
+以下の商品情報から、メリット・ベネフィット分析を行ってください。
+
+【商品情報】
 商品名: ${formData.productName}
 カテゴリ: ${formData.productCategory}
-説明: ${formData.productDescription}
-競合: ${formData.competitors}
+商品説明: ${formData.productDescription}
+${formData.competitors ? `競合: ${formData.competitors}` : ''}
 
-上記の商品について、簡単な競合分析を行い、以下のJSON形式で回答してください：
+【分析指示】
+1. メリット（商品の強み・特徴）を10個以上抽出
+2. 各メリットに対して2-3個のベネフィット（顧客価値）を導出
+3. 競合優位性を考慮した優先順位付け（1st/2nd/3rd）
+
+【出力形式】JSON
+{
+  "analysis": [
+    {
+      "priority": "1st/2nd/3rd",
+      "merit": "メリット内容",
+      "meritCategory": "カテゴリ名",
+      "benefits": [
+        {
+          "content": "ベネフィット内容",
+          "category": "カテゴリ"
+        }
+      ],
+      "rationale": "優先順位の判断根拠"
+    }
+  ]
+}`;
+            } else if (analysisType === 'competitor') {
+                prompt = `
+以下の商品情報から、四段階競合比較とUSP分析を行ってください。
+
+【商品情報】
+商品名: ${formData.productName}
+カテゴリ: ${formData.productCategory}
+商品説明: ${formData.productDescription}
+${formData.competitors ? `競合: ${formData.competitors}` : ''}
+
+【分析指示】
+1. 四段階競合比較（極小・小・中・大）で評価
+2. 各競合との効果・利便性・経済性を比較
+3. USP候補を5つ以上抽出し、優先順位付け
+4. 推奨USPの選定と戦略提案
+
+【出力形式】JSON
 {
   "competitorAnalysis": [
-    {"rank": "極小競合", "product": "自社商品", "effectiveness": "◎", "convenience": "◎", "economy": "◎"},
-    {"rank": "小競合", "product": "競合A", "effectiveness": "○", "convenience": "○", "economy": "△"}
+    {
+      "rank": "極小競合/小競合/中競合/大競合",
+      "product": "商品名",
+      "isOwnProduct": true/false,
+      "effectiveness": "◎/○/△/×",
+      "convenience": "◎/○/△/×",
+      "economy": "◎/○/△/×",
+      "overall": "総合評価"
+    }
   ],
   "uspAnalysis": {
-    "recommendedUSP": {"title": "主要USP", "description": "説明"},
+    "recommendedUSP": {
+      "title": "USPタイトル",
+      "description": "詳細説明",
+      "strategy": "戦略提案"
+    },
     "uspCandidates": [
-      {"priority": "高", "title": "USP1", "advantage": "優位性1", "value": "価値1"}
+      {
+        "priority": "高/中/低",
+        "title": "USP名",
+        "advantage": "競合優位性",
+        "value": "顧客価値"
+      }
     ]
   }
-}
-`;
-
+}`;
+            }
+            
             try {
-                console.log('分析開始 - GAS URL:', GAS_PROXY_URL);
-                console.log('送信プロンプト（短縮版）:', simplePrompt.substring(0, 200));
-                
                 const response = await fetch(GAS_PROXY_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'text/plain'
                     },
-                    body: JSON.stringify({
-                        prompt: simplePrompt
-                    })
+                    body: JSON.stringify({ prompt: prompt })
                 });
-                
-                console.log('レスポンスステータス:', response.status);
                 
                 if (!response.ok) {
                     throw new Error(`API request failed: ${response.status}`);
                 }
-
+                
                 const result = await response.json();
-                console.log('GASからの応答:', result);
                 
                 if (!result.success) {
                     throw new Error(result.error || 'API error');
                 }
                 
-                // Geminiの応答を取得
                 const resultText = result.data.candidates[0].content.parts[0].text;
-                console.log('Gemini生応答:', resultText);
+                const jsonStr = resultText.replace(/```json\n?|\n?```/g, '').trim();
                 
-                // JSONを抽出（マークダウンやコードブロックを除去）
-                let jsonStr = resultText;
-                
-                // ```json ... ``` を除去
-                jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-                
-                // 最初の { から最後の } までを抽出
-                const startIndex = jsonStr.indexOf('{');
-                const endIndex = jsonStr.lastIndexOf('}');
-                
-                if (startIndex === -1 || endIndex === -1) {
-                    console.error('JSON形式が見つかりません:', jsonStr);
-                    // フォールバック: サンプルデータを返す
-                    return createFallbackData(formData);
-                }
-                
-                jsonStr = jsonStr.substring(startIndex, endIndex + 1);
-                console.log('抽出されたJSON:', jsonStr);
-                
-                try {
-                    const analysis = JSON.parse(jsonStr);
-                    return analysis;
-                } catch (parseError) {
-                    console.error('JSONパースエラー:', parseError);
-                    console.log('パース対象文字列:', jsonStr);
-                    return createFallbackData(formData);
-                }
-                
+                return JSON.parse(jsonStr);
             } catch (error) {
-                console.error('分析エラーの詳細:', error);
+                console.error(`${analysisType}分析エラー:`, error);
                 throw error;
             }
         }
         
-        // フォールバックデータ生成
-        function createFallbackData(formData) {
-            return {
-                competitorAnalysis: [
-                    {
-                        rank: "極小競合",
-                        product: formData.productName + "（自社）",
-                        isOwnProduct: true,
-                        effectiveness: "◎",
-                        convenience: "◎",
-                        economy: "◎",
-                        overall: "◎ (高評価)"
-                    },
-                    {
-                        rank: "小競合",
-                        product: "競合製品",
-                        isOwnProduct: false,
-                        effectiveness: "○",
-                        convenience: "△",
-                        economy: "○",
-                        overall: "○ (中評価)"
-                    }
-                ],
-                uspAnalysis: {
-                    recommendedUSP: {
-                        title: "分析中",
-                        description: "詳細分析を実行中です",
-                        strategy: ""
-                    },
-                    uspCandidates: [
-                        {
-                            priority: "高",
-                            title: "主要差別化ポイント",
-                            advantage: "独自性",
-                            value: "顧客価値"
-                        }
-                    ]
-                }
-            };
-        }
-        
-        // 分析結果の表示
-        function displayAnalysisResults(results) {
-            // 四段階競合比較表示
-            const tbody = document.getElementById('competitorTableBody');
+        // メリット・ベネフィット分析結果の表示
+        function displayMeritAnalysisResults(data) {
+            const tbody = document.getElementById('resultsTableBody');
             tbody.innerHTML = '';
             
-            results.competitorAnalysis.forEach(item => {
-                const tr = document.createElement('tr');
-                
-                const rankClass = {
-                    '極小競合': 'rank-micro',
-                    '小競合': 'rank-small',
-                    '中競合': 'rank-medium',
-                    '大競合': 'rank-large'
-                }[item.rank] || '';
-                
-                const productName = item.isOwnProduct ? `${item.product}（自社）` : item.product;
-                
-                tr.innerHTML = `
-                    <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
-                    <td>${productName}</td>
-                    <td class="rating ${getRatingClass(item.effectiveness)}">${item.effectiveness}</td>
-                    <td class="rating ${getRatingClass(item.convenience)}">${item.convenience}</td>
-                    <td class="rating ${getRatingClass(item.economy)}">${item.economy}</td>
-                    <td>${item.overall}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+            if (!data || !data.analysis) return;
             
-            // 推奨USP表示
-            if (results.uspAnalysis && results.uspAnalysis.recommendedUSP) {
-                document.getElementById('uspRecommendation').innerHTML = `
-                    <h4>${results.uspAnalysis.recommendedUSP.title}</h4>
-                    <p style="margin-top: 0.5rem;">${results.uspAnalysis.recommendedUSP.description}</p>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
-                        <strong>戦略：</strong> ${results.uspAnalysis.recommendedUSP.strategy || ''}
-                    </p>
-                `;
-            }
-            
-            // USP候補表示
-            const uspTbody = document.getElementById('uspTableBody');
-            uspTbody.innerHTML = '';
-            
-            if (results.uspAnalysis && results.uspAnalysis.uspCandidates) {
-                results.uspAnalysis.uspCandidates.forEach(usp => {
+            data.analysis.forEach(item => {
+                item.benefits.forEach((benefit, index) => {
                     const tr = document.createElement('tr');
                     
-                    const priorityClass = {
-                        '高': 'priority-high',
-                        '中': 'priority-medium',
-                        '低': 'priority-low'
-                    }[usp.priority] || 'priority-medium';
+                    if (index === 0) {
+                        tr.innerHTML = `
+                            <td rowspan="${item.benefits.length}">
+                                <span class="priority-badge priority-${item.priority}">${item.priority}</span>
+                            </td>
+                            <td rowspan="${item.benefits.length}">${item.merit}</td>
+                            <td rowspan="${item.benefits.length}">${item.meritCategory}</td>
+                            <td>${benefit.content}</td>
+                            <td>${benefit.category}</td>
+                            <td rowspan="${item.benefits.length}" style="text-align: center;">${item.rationale || ''}</td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td>${benefit.content}</td>
+                            <td>${benefit.category}</td>
+                        `;
+                    }
                     
-                    tr.innerHTML = `
-                        <td><span class="usp-priority ${priorityClass}">${usp.priority}</span></td>
-                        <td>${usp.title}</td>
-                        <td>${usp.advantage}</td>
-                        <td>${usp.value}</td>
-                    `;
-                    uspTbody.appendChild(tr);
+                    tbody.appendChild(tr);
                 });
-            }
+            });
         }
         
-        // サンプル結果表示
-        function displaySampleResults(formData) {
-            // 四段階競合比較結果
-            const competitorData = [
-                {
-                    rank: '極小競合',
-                    product: formData.productName + '（自社）',
-                    effectiveness: '◎',
-                    convenience: '◎',
-                    economy: '◎',
-                    overall: '◎ (高評価)'
-                },
-                {
-                    rank: '極小競合',
-                    product: '他社モップ',
-                    effectiveness: '△',
-                    convenience: '○',
-                    economy: '◎',
-                    overall: '○ (中評価)'
-                },
-                {
-                    rank: '小競合',
-                    product: 'ロボット掃除機',
-                    effectiveness: '○',
-                    convenience: '◎',
-                    economy: '×',
-                    overall: '○ (中評価)'
-                },
-                {
-                    rank: '中競合',
-                    product: '掃除機',
-                    effectiveness: '○',
-                    convenience: '△',
-                    economy: '△',
-                    overall: '△ (低評価)'
-                },
-                {
-                    rank: '大競合',
-                    product: '家事代行サービス',
-                    effectiveness: '◎',
-                    convenience: '◎',
-                    economy: '×',
-                    overall: '○ (中評価)'
+        // 競合分析結果の表示
+        function displayCompetitorAnalysisResults(data) {
+            if (!data) return;
+            
+            // 四段階競合比較
+            if (data.competitorAnalysis) {
+                const tbody = document.getElementById('competitorTableBody');
+                tbody.innerHTML = '';
+                
+                data.competitorAnalysis.forEach(item => {
+                    const tr = document.createElement('tr');
+                    
+                    const rankClass = {
+                        '極小競合': 'rank-micro',
+                        '小競合': 'rank-small',
+                        '中競合': 'rank-medium',
+                        '大競合': 'rank-large'
+                    }[item.rank] || '';
+                    
+                    const productName = item.isOwnProduct ? `<strong>${item.product}（自社）</strong>` : item.product;
+                    
+                    tr.innerHTML = `
+                        <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
+                        <td>${productName}</td>
+                        <td class="rating ${getRatingClass(item.effectiveness)}">${item.effectiveness}</td>
+                        <td class="rating ${getRatingClass(item.convenience)}">${item.convenience}</td>
+                        <td class="rating ${getRatingClass(item.economy)}">${item.economy}</td>
+                        <td>${item.overall}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            
+            // USP分析
+            if (data.uspAnalysis) {
+                // 推奨USP
+                if (data.uspAnalysis.recommendedUSP) {
+                    document.getElementById('uspRecommendation').innerHTML = `
+                        <h4>${data.uspAnalysis.recommendedUSP.title}</h4>
+                        <p style="margin-top: 0.5rem;">${data.uspAnalysis.recommendedUSP.description}</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                            <strong>戦略：</strong> ${data.uspAnalysis.recommendedUSP.strategy || ''}
+                        </p>
+                    `;
                 }
-            ];
-            
-            const tbody = document.getElementById('competitorTableBody');
-            tbody.innerHTML = '';
-            
-            competitorData.forEach(item => {
-                const tr = document.createElement('tr');
                 
-                const rankClass = {
-                    '極小競合': 'rank-micro',
-                    '小競合': 'rank-small',
-                    '中競合': 'rank-medium',
-                    '大競合': 'rank-large'
-                }[item.rank];
-                
-                tr.innerHTML = `
-                    <td><span class="rank-badge ${rankClass}">${item.rank}</span></td>
-                    <td>${item.product}</td>
-                    <td class="rating ${getRatingClass(item.effectiveness)}">${item.effectiveness}</td>
-                    <td class="rating ${getRatingClass(item.convenience)}">${item.convenience}</td>
-                    <td class="rating ${getRatingClass(item.economy)}">${item.economy}</td>
-                    <td>${item.overall}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            
-            // 推奨USP
-            document.getElementById('uspRecommendation').innerHTML = `
-                <h4>独自技術による圧倒的な掃除効率と手軽さの両立</h4>
-                <p style="margin-top: 0.5rem;">独自のパイル構造により、他社モップや掃除機では実現できない「一拭きでの完璧な清掃」と「準備不要の手軽さ」を両立。忙しい主婦層に最適な掃除習慣作りのパートナー。</p>
-            `;
-            
-            // USP候補
-            const uspData = [
-                {
-                    priority: '高',
-                    title: '独自技術による3倍の吸着力',
-                    advantage: '特許取得済みの独自パイル構造',
-                    value: '掃除時間を半分に短縮'
-                },
-                {
-                    priority: '高',
-                    title: '手軽さNo.1の掃除習慣サポート',
-                    advantage: '準備・片付け不要',
-                    value: '毎日続けられる掃除習慣'
-                },
-                {
-                    priority: '中',
-                    title: '経済的な掃除ソリューション',
-                    advantage: '電気不要・維持費最小',
-                    value: '年間2万円の節約'
-                },
-                {
-                    priority: '中',
-                    title: '静音性による24時間利用可能',
-                    advantage: '無音での掃除が可能',
-                    value: 'いつでも掃除できる自由'
-                },
-                {
-                    priority: '中',
-                    title: 'エコフレンドリーな選択',
-                    advantage: '電力不要・洗って再利用',
-                    value: '環境に優しい掃除'
+                // USP候補
+                if (data.uspAnalysis.uspCandidates) {
+                    const uspTbody = document.getElementById('uspTableBody');
+                    uspTbody.innerHTML = '';
+                    
+                    data.uspAnalysis.uspCandidates.forEach(usp => {
+                        const tr = document.createElement('tr');
+                        
+                        const priorityClass = {
+                            '高': 'priority-high',
+                            '中': 'priority-medium',
+                            '低': 'priority-low'
+                        }[usp.priority] || 'priority-medium';
+                        
+                        tr.innerHTML = `
+                            <td><span class="usp-priority ${priorityClass}">${usp.priority}</span></td>
+                            <td>${usp.title}</td>
+                            <td>${usp.advantage}</td>
+                            <td>${usp.value}</td>
+                        `;
+                        uspTbody.appendChild(tr);
+                    });
                 }
-            ];
-            
-            const uspTbody = document.getElementById('uspTableBody');
-            uspTbody.innerHTML = '';
-            
-            uspData.forEach(usp => {
-                const tr = document.createElement('tr');
-                
-                const priorityClass = {
-                    '高': 'priority-high',
-                    '中': 'priority-medium',
-                    '低': 'priority-low'
-                }[usp.priority];
-                
-                tr.innerHTML = `
-                    <td><span class="usp-priority ${priorityClass}">${usp.priority}</span></td>
-                    <td>${usp.title}</td>
-                    <td>${usp.advantage}</td>
-                    <td>${usp.value}</td>
-                `;
-                uspTbody.appendChild(tr);
-            });
+            }
         }
         
         // 評価クラス取得
@@ -810,84 +913,166 @@
             }
         }
         
-        // 結果エクスポート
-        function exportResults() {
-            const results = {
-                timestamp: new Date().toISOString(),
-                productName: document.getElementById('productName').value,
-                competitorAnalysis: [],
-                uspAnalysis: []
+        // サンプル結果表示
+        function displaySampleResults(formData) {
+            // サンプルのメリット・ベネフィット分析結果
+            const sampleMeritData = {
+                analysis: [
+                    {
+                        priority: '1st',
+                        merit: '独自開発のマイクロカプセル化技術により3倍の浸透力',
+                        meritCategory: '技術・効果',
+                        benefits: [
+                            { content: 'レチノールの効果を最大限に引き出し、短期間で実感', category: '効果・効能' },
+                            { content: '競合製品より少量で高い効果が得られ経済的', category: '経済性' }
+                        ],
+                        rationale: '独自技術による差別化'
+                    },
+                    {
+                        priority: '2nd',
+                        merit: '皮膚科医監修で開発された処方',
+                        meritCategory: '権威性・信頼性',
+                        benefits: [
+                            { content: '医学的根拠に基づく安心感', category: '信頼性' },
+                            { content: '敏感肌でも使用できる安心設計', category: 'リスク回避' }
+                        ],
+                        rationale: '信頼性の担保'
+                    }
+                ]
             };
             
-            // テーブルデータ収集（実装省略）
+            // サンプルの競合分析結果
+            const sampleCompetitorData = {
+                competitorAnalysis: [
+                    {
+                        rank: '極小競合',
+                        product: formData.productName,
+                        isOwnProduct: true,
+                        effectiveness: '◎',
+                        convenience: '◎',
+                        economy: '○',
+                        overall: '◎ 優位'
+                    },
+                    {
+                        rank: '極小競合',
+                        product: 'SK-II',
+                        isOwnProduct: false,
+                        effectiveness: '○',
+                        convenience: '○',
+                        economy: '×',
+                        overall: '△ 高価格'
+                    },
+                    {
+                        rank: '小競合',
+                        product: '資生堂エリクシール',
+                        isOwnProduct: false,
+                        effectiveness: '○',
+                        convenience: '◎',
+                        economy: '○',
+                        overall: '○ 標準'
+                    }
+                ],
+                uspAnalysis: {
+                    recommendedUSP: {
+                        title: '医学的根拠×独自技術で実現する「3倍浸透レチノール」',
+                        description: '皮膚科医監修のもと開発された独自のマイクロカプセル技術により、従来品の3倍の浸透力を実現。敏感肌でも使える低刺激設計で、エイジングケアの新基準を提案。',
+                        strategy: '技術的優位性と安全性を同時に訴求し、高価格帯ながら価値を明確化'
+                    },
+                    uspCandidates: [
+                        {
+                            priority: '高',
+                            title: '3倍浸透のマイクロカプセル技術',
+                            advantage: '特許技術による独自性',
+                            value: '短期間での効果実感'
+                        },
+                        {
+                            priority: '高',
+                            title: '皮膚科医監修の安心処方',
+                            advantage: '医学的根拠の明確化',
+                            value: '敏感肌でも安心使用'
+                        },
+                        {
+                            priority: '中',
+                            title: '30日間返金保証',
+                            advantage: 'リスクフリーな試用',
+                            value: '購入障壁の除去'
+                        }
+                    ]
+                }
+            };
             
-            const dataStr = JSON.stringify(results, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            displayMeritAnalysisResults(sampleMeritData);
+            displayCompetitorAnalysisResults(sampleCompetitorData);
+        }
+        
+        // CSV エクスポート
+        function exportToCSV() {
+            let csv = '\uFEFF'; // BOM for UTF-8
+            const date = new Date().toISOString().split('T')[0];
             
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', `competitor_analysis_${Date.now()}.json`);
-            linkElement.click();
+            // メリット・ベネフィット分析
+            csv += 'メリット・ベネフィット分析\n';
+            csv += '優先順位,メリット,カテゴリ,ベネフィット,カテゴリ,判断根拠\n';
             
-            showToast('結果をエクスポートしました');
+            document.querySelectorAll('#resultsTableBody tr').forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                const row = Array.from(cells).map(cell => {
+                    const text = cell.textContent.replace(/"/g, '""');
+                    return `"${text}"`;
+                });
+                csv += row.join(',') + '\n';
+            });
+            
+            csv += '\n';
+            
+            // 四段階競合比較
+            csv += '四段階競合比較分析\n';
+            csv += '競合ランク,商品,効果,利便性,経済性,総合評価\n';
+            
+            document.querySelectorAll('#competitorTableBody tr').forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                const row = Array.from(cells).map(cell => {
+                    const text = cell.textContent.replace(/"/g, '""');
+                    return `"${text}"`;
+                });
+                csv += row.join(',') + '\n';
+            });
+            
+            csv += '\n';
+            
+            // USP分析
+            csv += 'USP分析\n';
+            csv += '優先度,USP,競合優位性,顧客価値\n';
+            
+            document.querySelectorAll('#uspTableBody tr').forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                const row = Array.from(cells).map(cell => {
+                    const text = cell.textContent.replace(/"/g, '""');
+                    return `"${text}"`;
+                });
+                csv += row.join(',') + '\n';
+            });
+            
+            // ダウンロード
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `商品価値分析_${date}.csv`;
+            link.click();
+            
+            showToast('CSVファイルをダウンロードしました');
         }
         
         // トースト表示
         function showToast(message) {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMessage').textContent = message;
+            const messageEl = document.getElementById('toastMessage');
+            messageEl.textContent = message;
             toast.classList.add('show');
             
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
-        }
-        
-        // デバッグ用：GAS接続テスト
-        async function testGASConnection() {
-            console.log('GAS接続テスト開始...');
-            console.log('GAS URL:', GAS_PROXY_URL);
-            
-            try {
-                const response = await fetch(GAS_PROXY_URL);
-                const data = await response.json();
-                console.log('GAS接続テスト成功:', data);
-                showToast('✅ GAS接続成功');
-            } catch (error) {
-                console.error('GAS接続エラー:', error);
-                showToast('❌ GAS接続失敗: ' + error.message);
-            }
-        }
-        
-        // 簡単なAPIテスト
-        async function testSimplePrompt() {
-            console.log('簡単なプロンプトテスト開始...');
-            
-            try {
-                const response = await fetch(GAS_PROXY_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
-                    body: JSON.stringify({
-                        prompt: 'こんにちは。テストです。簡単に返答してください。'
-                    })
-                });
-                
-                console.log('テストレスポンスステータス:', response.status);
-                const result = await response.json();
-                console.log('テスト結果:', result);
-                
-                if (result.success) {
-                    showToast('✅ API接続成功');
-                } else {
-                    showToast('❌ APIエラー: ' + result.error);
-                }
-            } catch (error) {
-                console.error('テストエラー:', error);
-                showToast('❌ テスト失敗: ' + error.message);
-            }
         }
     </script>
 </body>
